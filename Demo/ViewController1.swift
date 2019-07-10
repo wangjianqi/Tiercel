@@ -33,6 +33,7 @@ class ViewController1: UIViewController {
     }
 
     private func updateUI(_ task: DownloadTask) {
+        ///进度百分比
         let per = task.progress.fractionCompleted
         progressLabel.text = "progress： \(String(format: "%.2f", per * 100))%"
         progressView.progress = Float(per)
@@ -40,6 +41,8 @@ class ViewController1: UIViewController {
         timeRemainingLabel.text = "剩余时间： \(task.timeRemaining.tr.convertTimeToString())"
         startDateLabel.text = "开始时间： \(task.startDate.tr.convertTimeToDateString())"
         endDateLabel.text = "结束时间： \(task.endDate.tr.convertTimeToDateString())"
+        
+        ///验证
         var validation: String
         switch task.validation {
         case .unkown:
@@ -56,6 +59,7 @@ class ViewController1: UIViewController {
     }
     
     @IBAction func start(_ sender: UIButton) {
+        ///开始下载
         sessionManager.download(URLString)?.progress { [weak self] (task) in
             self?.updateUI(task)
         }.success { [weak self] (task) in
@@ -88,19 +92,23 @@ class ViewController1: UIViewController {
     }
 
     @IBAction func suspend(_ sender: UIButton) {
+        ///暂停
         sessionManager.suspend(URLString)
     }
 
 
     @IBAction func cancel(_ sender: UIButton) {
+        ///取消
         sessionManager.cancel(URLString)
     }
 
     @IBAction func deleteTask(_ sender: UIButton) {
+        ///删除
         sessionManager.remove(URLString, completely: false)
     }
 
     @IBAction func clearDisk(_ sender: Any) {
+        ///清理缓存
         sessionManager.cache.clearDiskCache()
     }
 }

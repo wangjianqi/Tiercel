@@ -258,6 +258,7 @@ public class DownloadTask: Task<DownloadTask> {
 }
 
 extension DownloadTask {
+    ///更新文件名
     internal func updateFileName(_ newFileName: String) {
         guard !fileName.isEmpty else { return }
         cache.updateFileName(self, newFileName)

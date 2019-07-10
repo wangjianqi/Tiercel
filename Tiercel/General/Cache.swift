@@ -26,6 +26,7 @@
 
 import UIKit
 
+///缓存信息
 public class Cache {
 
     private let ioQueue: DispatchQueue
@@ -38,12 +39,14 @@ public class Cache {
     
     public let identifier: String
     
+    ///文件
     private let fileManager = FileManager.default
     
     private let encoder = PropertyListEncoder()
     
     internal let decoder = PropertyListDecoder()
     
+    ///存放路径
     private final class func defaultDiskCachePathClosure(_ cacheName: String) -> String {
         let dstPath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first!
         return (dstPath as NSString).appendingPathComponent(cacheName)
@@ -59,6 +62,7 @@ public class Cache {
         self.identifier = name
         
         let ioQueueName = "com.Tiercel.Cache.ioQueue.\(name)"
+        ///创建队列
         ioQueue = DispatchQueue(label: ioQueueName)
         
         let cacheName = "com.Daniels.Tiercel.Cache.\(name)"
@@ -73,6 +77,7 @@ public class Cache {
         
         createDirectory()
 
+        ///plist
         decoder.userInfo[.cache] = self
         
     }
@@ -82,6 +87,7 @@ public class Cache {
 
 // MARK: - file
 extension Cache {
+    ///创建文件
     internal func createDirectory() {
 
         if !fileManager.fileExists(atPath: downloadTmpPath) {
@@ -161,6 +167,7 @@ extension Cache {
 
 // MARK: - retrieve
 extension Cache {
+    ///恢复所有的任务
     internal func retrieveAllTasks() -> [DownloadTask] {
         return ioQueue.sync {
             var path = (downloadPath as NSString).appendingPathComponent("\(identifier)_Tasks.plist")
@@ -169,12 +176,14 @@ extension Cache {
                 do {
                     let url = URL(fileURLWithPath: path)
                     let data = try Data(contentsOf: url)
+                    ///获取任务列表
                     tasks = try decoder.decode([DownloadTask].self, from: data)
                 } catch  {
                     TiercelLog("retrieveAllTasks error: \(error)", identifier: identifier)
                     return [DownloadTask]()
                 }
             } else {
+                ///从钥匙串获取
                 path = (downloadPath as NSString).appendingPathComponent("\(identifier)Tasks.plist")
                 tasks = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? [DownloadTask] ?? [DownloadTask]()
             }
@@ -266,6 +275,7 @@ extension Cache {
         }
     }
     
+    ///
     internal func updateFileName(_ task: DownloadTask, _ newFileName: String) {
         ioQueue.sync {
             if fileManager.fileExists(atPath: task.filePath) {

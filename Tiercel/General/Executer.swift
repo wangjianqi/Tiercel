@@ -28,6 +28,7 @@ import Foundation
 
 public typealias Handler<T> = (T) -> ()
 
+///是否在主线程中执行
 public struct Executer<T> {
     private let onMainQueue: Bool
     private let handler: Handler<T>?

@@ -31,7 +31,7 @@ internal class SessionDelegate: NSObject {
 
 }
 
-
+///下载回调
 extension SessionDelegate: URLSessionDownloadDelegate {
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         manager?.didBecomeInvalidation(withError: error)

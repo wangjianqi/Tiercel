@@ -83,6 +83,7 @@ public class SessionManager {
             if status == .running {
                 runningTasks = tasks.filter { $0.status == .running }
                 waitingTasks = tasks.filter { $0.status == .waiting }
+                ///
                 totalSuspend()
             } else {
                 session?.invalidateAndCancel()
@@ -127,6 +128,7 @@ public class SessionManager {
     
     
     private var _tasks: [DownloadTask] = []
+    ///任务
     public private(set) var tasks: [DownloadTask] {
         get {
             return dataQueue.sync {
@@ -141,6 +143,7 @@ public class SessionManager {
     }
     
     private var _runningTasks = [DownloadTask]()
+    ///下载中的任务
     private var runningTasks: [DownloadTask] {
         get {
             return dataQueue.sync {
@@ -155,6 +158,7 @@ public class SessionManager {
     }
     
     private var _waitingTasks = [DownloadTask]()
+    ///等待中的任务
     private var waitingTasks: [DownloadTask] {
         get {
             return dataQueue.sync {
@@ -217,14 +221,18 @@ public class SessionManager {
     private var controlExecuter: Executer<SessionManager>?
 
     
-    
+    ///构造方法
     public init(_ identifier: String,
                 configuration: SessionConfiguration,
                 operationQueue: DispatchQueue = DispatchQueue(label: "com.Tiercel.SessionManager.operationQueue")) {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? "com.Daniels.Tiercel"
+        ///设置id
         self.identifier = "\(bundleIdentifier).\(identifier)"
+        ///下载配置
         self._configuration = configuration
+        ///操作队列
         self.operationQueue = operationQueue
+        ///缓存
         cache = Cache(identifier)
         cache.decoder.userInfo[.operationQueue] = operationQueue
         tasks = cache.retrieveAllTasks()
@@ -249,10 +257,14 @@ public class SessionManager {
 
     private func createSession(_ completion: (() -> ())? = nil) {
         guard shouldCreatSession else { return }
+        ///配置
         let sessionConfiguration = URLSessionConfiguration.background(withIdentifier: identifier)
         sessionConfiguration.timeoutIntervalForRequest = configuration.timeoutIntervalForRequest
+        ///连接数
         sessionConfiguration.httpMaximumConnectionsPerHost = 100000
+        ///蜂窝下载
         sessionConfiguration.allowsCellularAccess = configuration.allowsCellularAccess
+        ///设置下载回调代理
         let sessionDelegate = SessionDelegate()
         sessionDelegate.manager = self
         let delegateQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: operationQueue, name: "com.Tiercel.SessionManager.delegateQueue")
@@ -311,6 +323,7 @@ extension SessionManager {
                          headers: [String: String]? = nil,
                          fileName: String? = nil) -> DownloadTask? {
         do {
+            ///下载地址
             let validURL = try url.asURL()
             var task: DownloadTask?
             operationQueue.sync {
@@ -321,6 +334,7 @@ extension SessionManager {
                         task.updateFileName(fileName)
                     }
                 } else {
+                    ///创建任务
                     task = DownloadTask(validURL,
                                         headers: headers,
                                         fileName: fileName,
@@ -383,7 +397,7 @@ extension SessionManager {
 
 // MARK: - single task control
 extension SessionManager {
-    
+    ///获取任务
     public func fetchTask(_ url: URLConvertible) -> DownloadTask? {
         do {
             let validURL = try url.asURL()
@@ -482,9 +496,11 @@ extension SessionManager {
         }
     }
     
+    ///全部挂起
     public func totalSuspend(onMainQueue: Bool = true, _ handler: Handler<SessionManager>? = nil) {
         operationQueue.async {
             guard self.status == .running || self.status == .waiting else { return }
+            ///将要挂起
             self.status = .willSuspend
             self.controlExecuter = Executer(onMainQueue: onMainQueue, handler: handler)
             self.tasks.forEach { $0.suspend() }

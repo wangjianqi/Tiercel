@@ -41,7 +41,7 @@ public enum Status: String {
     case willRemove
 }
 
-
+///log日志
 public enum LogLevel {
     case detailed
     case simple
@@ -50,7 +50,7 @@ public enum LogLevel {
 
 
 
-
+///
 public struct TiercelWrapper<Base> {
     internal let base: Base
     internal init(_ base: Base) {
