@@ -67,6 +67,7 @@ extension ViewController3 {
             
             // 如果同时开启的下载任务过多，会阻塞主线程，所以可以在子线程中开启
             DispatchQueue.global().async {
+                /// 批量创建下载任务并且开启下载，返回有效url对应的任务数组，url需要跟fileNames一一对应
                 self.sessionManager?.multiDownload(self.downloadURLStrings)
                 
                 DispatchQueue.main.async {

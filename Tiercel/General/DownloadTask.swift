@@ -31,7 +31,7 @@ public class DownloadTask: Task<DownloadTask> {
     private enum CodingKeys: CodingKey {
         case resumeData
     }
-    
+    ///任务
     internal var task: URLSessionDownloadTask? {
         willSet {
             task?.removeObserver(self, forKeyPath: "currentRequest")
@@ -87,7 +87,7 @@ public class DownloadTask: Task<DownloadTask> {
         }
     }
     
-
+    ///创建下载任务
     internal init(_ url: URL,
                   headers: [String: String]? = nil,
                   fileName: String? = nil,
@@ -142,6 +142,7 @@ public class DownloadTask: Task<DownloadTask> {
         NotificationCenter.default.removeObserver(self)
     }
     
+    ///开启任务
     @objc private func fixDelegateMethodError() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.task?.suspend()
@@ -166,6 +167,7 @@ public class DownloadTask: Task<DownloadTask> {
     }
     
 
+    ///挂起任务
     internal func suspend(onMainQueue: Bool = true, _ handler: Handler<DownloadTask>? = nil) {
         guard status == .running || status == .waiting else { return }
         controlExecuter = Executer(onMainQueue: onMainQueue, handler: handler)
@@ -186,11 +188,14 @@ public class DownloadTask: Task<DownloadTask> {
         }
     }
     
+    ///取消
     internal func cancel(onMainQueue: Bool = true, _ handler: Handler<DownloadTask>? = nil) {
+        ///已经下载的，无影响
         guard status != .succeeded else { return }
         controlExecuter = Executer(onMainQueue: onMainQueue, handler: handler)
         if status == .running {
             status = .willCancel
+            ///取消
             task?.cancel()
         } else {
             status = .willCancel
@@ -203,6 +208,7 @@ public class DownloadTask: Task<DownloadTask> {
     }
 
 
+    ///删除
     internal func remove(completely: Bool = false, onMainQueue: Bool = true, _ handler: Handler<DownloadTask>? = nil) {
         self.isRemoveCompletely = completely
         controlExecuter = Executer(onMainQueue: onMainQueue, handler: handler)
@@ -273,6 +279,7 @@ extension DownloadTask {
         switch status {
         case .waiting, .suspended, .failed:
             if manager.shouldRun {
+                ///继续下载
                 startToDownload()
             } else {
                 status = .waiting
@@ -292,6 +299,7 @@ extension DownloadTask {
         if let resumeData = resumeData {
             cache.retrieveTmpFile(self)
             if #available(iOS 10.2, *) {
+                /// 用resumeData恢复下载
                 task = session?.downloadTask(withResumeData: resumeData)
             } else if #available(iOS 10.0, *) {
                 task = session?.correctedDownloadTask(withResumeData: resumeData)
@@ -335,6 +343,8 @@ extension DownloadTask {
 
 // MARK: - closure
 extension DownloadTask {
+    
+    ///验证
     @discardableResult
     public func validateFile(code: String,
                              type: FileVerificationType,
@@ -405,9 +415,12 @@ extension DownloadTask {
 
 // MARK: - download callback
 extension DownloadTask {
+    ///下载进度
     internal func didWriteData(bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        ///进度
         progress.completedUnitCount = totalBytesWritten
         progress.totalUnitCount = totalBytesExpectedToWrite
+        ///开启指示器
         if SessionManager.isControlNetworkActivityIndicator {
             DispatchQueue.main.tr.safeAsync {
                 UIApplication.shared.isNetworkActivityIndicatorVisible = true
@@ -417,25 +430,30 @@ extension DownloadTask {
         manager?.updateProgress()
     }
     
-    
+    ///下载完成
     internal func didFinishDownloadingTo(location: URL) {
         self.tmpFileURL = location
         cache.storeFile(self)
         cache.removeTmpFile(self)
     }
     
+    ///完成
     internal func didComplete(task: URLSessionTask, error: Error?) {
+        ///隐藏指示器
         if SessionManager.isControlNetworkActivityIndicator {
             DispatchQueue.main.tr.safeAsync {
                 UIApplication.shared.isNetworkActivityIndicatorVisible = false
             }
         }
 
+        ///总共大小
         progress.totalUnitCount = task.countOfBytesExpectedToReceive
+        ///已经完成
         progress.completedUnitCount = task.countOfBytesReceived
         progress.setUserInfoObject(task.countOfBytesReceived, forKey: .fileCompletedCountKey)
 
         if let error = error {
+            ///错误
             self.error = error
         
             if let resumeData = (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data {
@@ -477,6 +495,7 @@ extension DownloadTask {
                 failureExecuter?.execute(self)
             }
         } else {
+            ///完成
             completed()
         }
         manager?.completed()

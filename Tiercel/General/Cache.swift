@@ -62,7 +62,7 @@ public class Cache {
         self.identifier = name
         
         let ioQueueName = "com.Tiercel.Cache.ioQueue.\(name)"
-        ///创建队列
+        ///创建串行队列
         ioQueue = DispatchQueue(label: ioQueueName)
         
         let cacheName = "com.Daniels.Tiercel.Cache.\(name)"
@@ -147,7 +147,7 @@ extension Cache {
     }
     
     
-    
+    ///清理缓存
     public func clearDiskCache(onMainQueue: Bool = true, _ handler: Handler<Cache>? = nil) {
         ioQueue.async {
             guard self.fileManager.fileExists(atPath: self.downloadPath) else { return }
@@ -183,7 +183,7 @@ extension Cache {
                     return [DownloadTask]()
                 }
             } else {
-                ///从钥匙串获取
+                ///解档
                 path = (downloadPath as NSString).appendingPathComponent("\(identifier)Tasks.plist")
                 tasks = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? [DownloadTask] ?? [DownloadTask]()
             }
@@ -241,6 +241,7 @@ extension Cache {
         }
     }
     
+    ///保存
     internal func storeFile(_ task: DownloadTask) {
         ioQueue.sync {
             guard let location = task.tmpFileURL else { return }

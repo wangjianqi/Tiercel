@@ -76,11 +76,13 @@ public class Task<T>: NSObject, NSCoding, Codable {
 
     internal var validateExecuter: Executer<T>?
 
+    ///同步队列
     internal let dataQueue = DispatchQueue(label: "com.Tiercel.Task.dataQueue")
 
     internal var request: URLRequest?
     
     private var _isRemoveCompletely = false
+    ///是否删除已经完成的
     internal var isRemoveCompletely: Bool {
         get {
             return dataQueue.sync {
@@ -95,6 +97,8 @@ public class Task<T>: NSObject, NSCoding, Codable {
     }
 
     private var _status: Status = .waiting
+    
+    ///读取和写入
     public var status: Status {
         get {
             return dataQueue.sync {
@@ -142,6 +146,7 @@ public class Task<T>: NSObject, NSCoding, Codable {
     public let progress: Progress = Progress()
 
     private var _startDate: Double = 0
+    ///开始日期
     public internal(set) var startDate: Double {
         get {
             return dataQueue.sync {
@@ -156,6 +161,7 @@ public class Task<T>: NSObject, NSCoding, Codable {
     }
 
     private var _endDate: Double = 0
+    ///结束日期
     public internal(set) var endDate: Double {
         get {
             return dataQueue.sync {
@@ -200,6 +206,7 @@ public class Task<T>: NSObject, NSCoding, Codable {
     }
 
     private var _timeRemaining: Int64 = 0
+    ///剩余时间
     public internal(set) var timeRemaining: Int64 {
         get {
             return dataQueue.sync {
@@ -336,6 +343,7 @@ public class Task<T>: NSObject, NSCoding, Codable {
 
 extension Task {
     @discardableResult
+    ///进度
     public func progress(onMainQueue: Bool = true, _ handler: @escaping Handler<T>) -> Self {
         return operationQueue.sync {
             progressExecuter = Executer(onMainQueue: onMainQueue, handler: handler)
@@ -344,6 +352,7 @@ extension Task {
 
     }
 
+    ///下载成功
     @discardableResult
     public func success(onMainQueue: Bool = true, _ handler: @escaping Handler<T>) -> Self {
         operationQueue.sync {
@@ -358,6 +367,7 @@ extension Task {
 
     }
 
+    ///下载失败
     @discardableResult
     public func failure(onMainQueue: Bool = true, _ handler: @escaping Handler<T>) -> Self {
         operationQueue.sync {

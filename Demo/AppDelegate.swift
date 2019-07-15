@@ -17,7 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     let sessionManager1 = SessionManager("ViewController1", configuration: SessionConfiguration())
-    
+    // 不能使用懒加载
     var sessionManager2: SessionManager = {
         var configuration = SessionConfiguration()
         configuration.allowsCellularAccess = true
@@ -33,6 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
+        // 必须要保证在这个方法结束前完成SessionManager初始化
         return true
     }
 
@@ -58,6 +59,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
     
+    ///SessionManager实例必须在App启动的时候创建，并且在AppDelegate 文件里实现以下方法
+    ///必须实现此方法，并且把identifier对应的completionHandler保存起来
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
         let downloadManagers = [sessionManager1, sessionManager2, sessionManager3, sessionManager4]
         for manager in downloadManagers {

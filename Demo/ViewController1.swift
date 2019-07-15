@@ -65,7 +65,6 @@ class ViewController1: UIViewController {
         }.success { [weak self] (task) in
             self?.updateUI(task)
             // 下载任务成功了
-
         }.failure { [weak self] (task) in
             self?.updateUI(task)
             
@@ -98,12 +97,12 @@ class ViewController1: UIViewController {
 
 
     @IBAction func cancel(_ sender: UIButton) {
-        ///取消
+        // 取消下载，没有下载完成的任务会被移除，不保留缓存，已经下载完成的不受影响
         sessionManager.cancel(URLString)
     }
 
     @IBAction func deleteTask(_ sender: UIButton) {
-        ///删除
+        // 移除下载，任何状态的任务都会被移除，没有下载完成的缓存文件会被删除，可以选择是否保留已经下载完成的文件
         sessionManager.remove(URLString, completely: false)
     }
 

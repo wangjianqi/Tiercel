@@ -63,6 +63,7 @@ extension ViewController2 {
         guard let URLString = URLStrings.first(where: { !downloadURLStrings.contains($0) }) else { return }
         downloadURLStrings.append(URLString)
         sessionManager?.download(URLString)
+        ///插入
         let index = downloadURLStrings.count - 1
         tableView.insertRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
         updateUI()

@@ -58,8 +58,10 @@ public class SessionManager {
     
     public let cache: Cache
     
+    ///id
     public let identifier: String
     
+    ///完成
     public var completionHandler: (() -> Void)?
 
     private var _shouldCreatSession: Bool = false
@@ -128,7 +130,7 @@ public class SessionManager {
     
     
     private var _tasks: [DownloadTask] = []
-    ///任务
+    ///任务:可以获取总任务数
     public private(set) var tasks: [DownloadTask] {
         get {
             return dataQueue.sync {
@@ -172,11 +174,13 @@ public class SessionManager {
         }
     }
     
+    ///已下载完成的任务
     public var completedTasks: [DownloadTask] {
         return tasks.filter { $0.status == .succeeded }
     }
 
     private let _progress = Progress()
+    ///进度
     public var progress: Progress {
         _progress.completedUnitCount = tasks.reduce(0, { $0 + $1.progress.completedUnitCount })
         _progress.totalUnitCount = tasks.reduce(0, { $0 + $1.progress.totalUnitCount })
@@ -184,6 +188,7 @@ public class SessionManager {
     }
 
     private var _speed: Int64 = 0
+    ///下载速度
     public private(set) var speed: Int64 {
         get {
             return dataQueue.sync {
@@ -197,7 +202,7 @@ public class SessionManager {
         }
     }
 
-
+    ///剩余下载时间
     private var _timeRemaining: Int64 = 0
     public private(set) var timeRemaining: Int64 {
         get {
@@ -226,14 +231,15 @@ public class SessionManager {
                 configuration: SessionConfiguration,
                 operationQueue: DispatchQueue = DispatchQueue(label: "com.Tiercel.SessionManager.operationQueue")) {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? "com.Daniels.Tiercel"
-        ///设置id
+        ///设置id:必须是唯一的
         self.identifier = "\(bundleIdentifier).\(identifier)"
         ///下载配置
         self._configuration = configuration
-        ///操作队列
+        ///串行队列
         self.operationQueue = operationQueue
         ///缓存
         cache = Cache(identifier)
+        ///串行队列
         cache.decoder.userInfo[.operationQueue] = operationQueue
         tasks = cache.retrieveAllTasks()
         tasks.forEach {
@@ -255,9 +261,10 @@ public class SessionManager {
     }
 
 
+    ///实现后台下载
     private func createSession(_ completion: (() -> ())? = nil) {
         guard shouldCreatSession else { return }
-        ///配置
+    ///必须使用background(withIdentifier:)方法创建URLSessionConfiguration，其中这个identifier必须是固定的，而且为了避免跟其他App冲突，建议这个identifier跟App的Bundle ID相关
         let sessionConfiguration = URLSessionConfiguration.background(withIdentifier: identifier)
         sessionConfiguration.timeoutIntervalForRequest = configuration.timeoutIntervalForRequest
         ///连接数
@@ -267,6 +274,7 @@ public class SessionManager {
         ///设置下载回调代理
         let sessionDelegate = SessionDelegate()
         sessionDelegate.manager = self
+        ///操作队列
         let delegateQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: operationQueue, name: "com.Tiercel.SessionManager.delegateQueue")
         session = URLSession(configuration: sessionConfiguration, delegate: sessionDelegate, delegateQueue: delegateQueue)
         tasks.forEach { $0.session = session }
@@ -434,6 +442,7 @@ extension SessionManager {
         }
     }
     
+    ///开始
     public func start(_ task: DownloadTask) {
         operationQueue.async {
             if !self.shouldCreatSession {
@@ -489,7 +498,7 @@ extension SessionManager {
 
 // MARK: - total tasks control
 extension SessionManager {
-    
+    ///全部开始
     public func totalStart() {
         self.tasks.forEach { task in
             start(task)
@@ -508,6 +517,7 @@ extension SessionManager {
 
     }
     
+    ///全部取消
     public func totalCancel(onMainQueue: Bool = true, _ handler: Handler<SessionManager>? = nil) {
         operationQueue.async {
             guard self.status != .succeeded && self.status != .canceled else { return }
@@ -517,6 +527,7 @@ extension SessionManager {
         }
     }
     
+    ///全部删除
     public func totalRemove(completely: Bool = false, onMainQueue: Bool = true, _ handler: Handler<SessionManager>? = nil) {
         operationQueue.async {
             guard self.status != .removed else { return }
@@ -540,10 +551,12 @@ extension SessionManager {
         }
     }
     
+    ///更新进度
     internal func updateProgress() {
         progressExecuter?.execute(self)
     }
     
+    ///取消或删除
     internal func didCancelOrRemove(_ url: URLConvertible) {
         guard let task = fetchTask(url) else { return }
         tasks.removeAll { $0.url == task.url}
@@ -753,6 +766,7 @@ extension SessionManager {
 
 // MARK: - call back
 extension SessionManager {
+    ///无效错误
     internal func didBecomeInvalidation(withError error: Error?) {
         createSession { [weak self] in
             guard let self = self else { return }
@@ -763,8 +777,10 @@ extension SessionManager {
         }
     }
     
+    ///结束
     internal func didFinishEvents(forBackgroundURLSession session: URLSession) {
         DispatchQueue.main.tr.safeAsync {
+            ///完成
             self.completionHandler?()
             self.completionHandler = nil
         }

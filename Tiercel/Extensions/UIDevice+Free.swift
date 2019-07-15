@@ -29,6 +29,7 @@ import Foundation
 
 extension UIDevice: TiercelCompatible {}
 extension TiercelWrapper where Base: UIDevice {
+    ///磁盘剩余空间
     public var freeDiskSpaceInBytes: Int64 {
         if #available(iOS 11.0, *) {
             if let space = try? URL(fileURLWithPath: NSHomeDirectory() as String).resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage {

@@ -25,7 +25,7 @@
 //
 
 import Foundation
-
+///转url
 public protocol URLConvertible {
 
     func asURL() throws -> URL

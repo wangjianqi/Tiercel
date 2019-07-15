@@ -26,7 +26,7 @@
 
 import Foundation
 
-
+///下载状态
 public enum Status: String {
     case waiting
     case running
